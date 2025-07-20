@@ -1,0 +1,831 @@
+{
+  "name": "bmad-vscode-extension",
+  "displayName": "BMAD AI Agent Orchestrator",
+  "description": "Collaborative AI agent workflows for comprehensive development with intelligent automation and zero-configuration setup",
+  "version": "1.0.0",
+  "publisher": "bmad-code",
+  "engines": {
+    "vscode": "^1.92.0",
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning",
+    "Snippets",
+    "Debuggers",
+    "Extension Packs"
+  ],
+  "keywords": [
+    "ai",
+    "agents",
+    "collaboration",
+    "documentation",
+    "architecture",
+    "project-management",
+    "automation",
+    "workflow",
+    "orchestration"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "workspaceContains:package.json",
+    "workspaceContains:requirements.txt",
+    "workspaceContains:Cargo.toml",
+    "workspaceContains:go.mod",
+    "workspaceContains:pom.xml",
+    "workspaceContains:composer.json"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "bmad.activateDocumentationMode",
+        "title": "Activate Documentation Mode",
+        "category": "BMAD",
+        "icon": "$(book)"
+      },
+      {
+        "command": "bmad.activateFullDevelopmentMode",
+        "title": "Activate Full Development Mode",
+        "category": "BMAD",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "bmad.continueProject",
+        "title": "Continue Existing Project",
+        "category": "BMAD",
+        "icon": "$(debug-continue)"
+      },
+      {
+        "command": "bmad.taskOverview",
+        "title": "Task List Overview",
+        "category": "BMAD",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "bmad.debugMode",
+        "title": "Debug & Troubleshoot Mode",
+        "category": "BMAD",
+        "icon": "$(debug)"
+      },
+      {
+        "command": "bmad.continuousExecution",
+        "title": "Continuous Execution Mode",
+        "category": "BMAD",
+        "icon": "$(play)"
+      },
+      {
+        "command": "bmad.featureGapAnalysis",
+        "title": "Feature Gap Analysis Mode",
+        "category": "BMAD",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bmad.githubIntegration",
+        "title": "GitHub Integration & Documentation Mode",
+        "category": "BMAD",
+        "icon": "$(github)"
+      },
+      {
+        "command": "bmad.scanWorkspace",
+        "title": "Scan Workspace",
+        "category": "BMAD",
+        "icon": "$(search-view-icon)"
+      },
+      {
+        "command": "bmad.autoSetup",
+        "title": "Auto Setup Project",
+        "category": "BMAD",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "bmad.detectStack",
+        "title": "Detect Technology Stack",
+        "category": "BMAD",
+        "icon": "$(layers)"
+      },
+      {
+        "command": "bmad.selectAgents",
+        "title": "Select AI Agents",
+        "category": "BMAD",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "bmad.agentHandoff",
+        "title": "Agent Handoff",
+        "category": "BMAD",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "bmad.debugCurrentFile",
+        "title": "Debug Current File",
+        "category": "BMAD",
+        "icon": "$(debug)"
+      },
+      {
+        "command": "bmad.documentCurrentFile",
+        "title": "Document Current File",
+        "category": "BMAD",
+        "icon": "$(book)"
+      },
+      {
+        "command": "bmad.debugSelection",
+        "title": "Debug Selection",
+        "category": "BMAD",
+        "icon": "$(debug)"
+      },
+      {
+        "command": "bmad.explainCode",
+        "title": "Explain Code",
+        "category": "BMAD",
+        "icon": "$(question)"
+      },
+      {
+        "command": "bmad.generateTests",
+        "title": "Generate Tests",
+        "category": "BMAD",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "bmad.analyzeFolder",
+        "title": "Analyze Folder",
+        "category": "BMAD",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bmad.generateDocsForFolder",
+        "title": "Generate Documentation for Folder",
+        "category": "BMAD",
+        "icon": "$(book)"
+      },
+      {
+        "command": "bmad.refreshAnalysis",
+        "title": "Refresh Analysis",
+        "category": "BMAD",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "bmad.openSettings",
+        "title": "Open BMAD Settings",
+        "category": "BMAD",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "bmad.showHelp",
+        "title": "Show Help",
+        "category": "BMAD",
+        "icon": "$(question)"
+      },
+      {
+        "command": "bmad.dependencyAudit",
+        "title": "Dakota: Dependency Audit",
+        "category": "BMAD",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bmad.dependencyModernization",
+        "title": "Dakota: Modernize Dependencies",
+        "category": "BMAD",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "bmad.startDependencyMonitoring",
+        "title": "Dakota: Start Monitoring",
+        "category": "BMAD",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "bmad.stopDependencyMonitoring",
+        "title": "Dakota: Stop Monitoring",
+        "category": "BMAD",
+        "icon": "$(eye-closed)"
+      },
+      {
+        "command": "bmad.checkSecurityVulnerabilities",
+        "title": "Dakota: Security Scan",
+        "category": "BMAD",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "bmad.updateOutdatedDependencies",
+        "title": "Dakota: Update Outdated",
+        "category": "BMAD",
+        "icon": "$(package)"
+      },
+      {
+        "command": "bmad.generateDependencyReport",
+        "title": "Dakota: Generate Report",
+        "category": "BMAD",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "bmad.analyzeDependencyLicenses",
+        "title": "Dakota: License Analysis",
+        "category": "BMAD",
+        "icon": "$(law)"
+      },
+      {
+        "command": "bmad.deploymentPreparation",
+        "title": "Phoenix: Deployment Preparation",
+        "category": "BMAD",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "bmad.containerizeProject",
+        "title": "Phoenix: Containerize Project",
+        "category": "BMAD",
+        "icon": "$(package)"
+      },
+      {
+        "command": "bmad.crossPlatformSetup",
+        "title": "Phoenix: Cross-Platform Setup",
+        "category": "BMAD",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "bmad.generateDeploymentScripts",
+        "title": "Phoenix: Generate Deployment Scripts",
+        "category": "BMAD",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "bmad.validateDeploymentConfig",
+        "title": "Phoenix: Validate Configuration",
+        "category": "BMAD",
+        "icon": "$(check)"
+      },
+      {
+        "command": "bmad.deploymentHealthCheck",
+        "title": "Phoenix: Health Check",
+        "category": "BMAD",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "bmad.rollbackDeployment",
+        "title": "Phoenix: Rollback Deployment",
+        "category": "BMAD",
+        "icon": "$(history)"
+      },
+      {
+        "command": "bmad.deploymentDocumentation",
+        "title": "Phoenix: Generate Documentation",
+        "category": "BMAD",
+        "icon": "$(book)"
+      },
+      {
+        "command": "bmad.versionTracking",
+        "title": "Chronos: Version Tracking",
+        "category": "BMAD",
+        "icon": "$(versions)"
+      },
+      {
+        "command": "bmad.tokenMonitoring",
+        "title": "Chronos: Token Monitoring",
+        "category": "BMAD",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "bmad.modelUpdatesResearch",
+        "title": "Chronos: Model Updates Research",
+        "category": "BMAD",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bmad.generateVersionChangelog",
+        "title": "Chronos: Generate Changelog",
+        "category": "BMAD",
+        "icon": "$(list-ordered)"
+      },
+      {
+        "command": "bmad.optimizeTokenUsage",
+        "title": "Chronos: Optimize Token Usage",
+        "category": "BMAD",
+        "icon": "$(zap)"
+      },
+      {
+        "command": "bmad.checkTokenLimits",
+        "title": "Chronos: Check Token Limits",
+        "category": "BMAD",
+        "icon": "$(gauge)"
+      },
+      {
+        "command": "bmad.updateModelSpecs",
+        "title": "Chronos: Update Model Specifications",
+        "category": "BMAD",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "bmad.generateTokenReport",
+        "title": "Chronos: Generate Token Report",
+        "category": "BMAD",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "bmad.taskCompletionMonitoring",
+        "title": "Sentinel: Task Completion Monitoring",
+        "category": "BMAD",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "bmad.checklistValidation",
+        "title": "Sentinel: Checklist Validation",
+        "category": "BMAD",
+        "icon": "$(list-ordered)"
+      },
+      {
+        "command": "bmad.qualityAssuranceReview",
+        "title": "Sentinel: Quality Assurance Review",
+        "category": "BMAD",
+        "icon": "$(verified)"
+      },
+      {
+        "command": "bmad.generateCompletionReport",
+        "title": "Sentinel: Generate Completion Report",
+        "category": "BMAD",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "bmad.validateTaskCriteria",
+        "title": "Sentinel: Validate Task Criteria",
+        "category": "BMAD",
+        "icon": "$(check)"
+      },
+      {
+        "command": "bmad.updateCompletionStatus",
+        "title": "Sentinel: Update Completion Status",
+        "category": "BMAD",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "bmad.monitorQualityStandards",
+        "title": "Sentinel: Monitor Quality Standards",
+        "category": "BMAD",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "bmad.generateQualityAssessment",
+        "title": "Sentinel: Generate Quality Assessment",
+        "category": "BMAD",
+        "icon": "$(star)"
+      },
+      {
+        "command": "bmad.healthCheck",
+        "title": "Project Health Check",
+        "category": "BMAD",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "bmad.showProgress",
+        "title": "Show Progress Details",
+        "category": "BMAD",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "bmad.quickModeSelect",
+        "title": "Quick Mode Selection",
+        "category": "BMAD",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "bmad.conceptualizeAgent",
+        "title": "Creator: Conceptualize New Agent",
+        "category": "BMAD",
+        "icon": "$(lightbulb)"
+      },
+      {
+        "command": "bmad.generateAgent",
+        "title": "Creator: Generate New Agent",
+        "category": "BMAD",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "bmad.deployAgent",
+        "title": "Creator: Deploy New Agent",
+        "category": "BMAD",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "bmad.generateAgentBrief",
+        "title": "Creator: Generate New Agent Brief",
+        "category": "BMAD",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "bmad.validateAgentConcept",
+        "title": "Creator: Validate Agent Concept",
+        "category": "BMAD",
+        "icon": "$(check)"
+      },
+      {
+        "command": "bmad.analyzeAgentPerformance",
+        "title": "Creator: Analyze Agent Performance",
+        "category": "BMAD",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "bmad.researchAgentModels",
+        "title": "Creator: Research Agent Models",
+        "category": "BMAD",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bmad.generateDeploymentPlan",
+        "title": "Creator: Generate Deployment Plan",
+        "category": "BMAD",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "bmad.designWebAgentUI",
+        "title": "Web Creator: Design Web Agent UI",
+        "category": "BMAD",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "bmad.generateWebAgent",
+        "title": "Web Creator: Generate Web Agent",
+        "category": "BMAD",
+        "icon": "$(code)"
+      },
+      {
+        "command": "bmad.deployWebAgent",
+        "title": "Web Creator: Deploy Web Agent",
+        "category": "BMAD",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "bmad.generateWebAgentSpec",
+        "title": "Web Creator: Generate Web Agent Spec",
+        "category": "BMAD",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "bmad.validateWebAgentDesign",
+        "title": "Web Creator: Validate Web Agent Design",
+        "category": "BMAD",
+        "icon": "$(check)"
+      },
+      {
+        "command": "bmad.analyzeWebAgentPerformance",
+        "title": "Web Creator: Analyze Web Performance",
+        "category": "BMAD",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "bmad.researchWebTechnologies",
+        "title": "Web Creator: Research Web Technologies",
+        "category": "BMAD",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bmad.generateStyleGuide",
+        "title": "Web Creator: Generate Style Guide",
+        "category": "BMAD",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "bmad.analyzeDocumentation",
+        "title": "DocQA: Analyze Documentation",
+        "category": "BMAD",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bmad.validateDocumentationStandards",
+        "title": "DocQA: Validate Documentation Standards",
+        "category": "BMAD",
+        "icon": "$(verified)"
+      },
+      {
+        "command": "bmad.generateDocumentationReport",
+        "title": "DocQA: Generate Documentation Report",
+        "category": "BMAD",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "bmad.improveDocumentation",
+        "title": "DocQA: Improve Documentation",
+        "category": "BMAD",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "bmad.auditContentQuality",
+        "title": "DocQA: Audit Content Quality",
+        "category": "BMAD",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "bmad.generateDocumentationSpec",
+        "title": "DocQA: Generate Documentation Spec",
+        "category": "BMAD",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "bmad.createStyleGuide",
+        "title": "DocQA: Create Style Guide",
+        "category": "BMAD",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "bmad.researchDocumentationBestPractices",
+        "title": "DocQA: Research Best Practices",
+        "category": "BMAD",
+        "icon": "$(book)"
+      },
+      {
+        "command": "bmad.decomposeTask",
+        "title": "Chunky: Decompose Task",
+        "category": "BMAD",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "bmad.orchestrateExecution",
+        "title": "Chunky: Orchestrate Execution",
+        "category": "BMAD",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "bmad.performBackgroundOptimization",
+        "title": "Chunky: Background Optimization",
+        "category": "BMAD",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "bmad.generateDecompositionPlan",
+        "title": "Chunky: Generate Decomposition Plan",
+        "category": "BMAD",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "bmad.createOrchestrationFramework",
+        "title": "Chunky: Create Orchestration Framework",
+        "category": "BMAD",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "bmad.researchTaskManagementBestPractices",
+        "title": "Chunky: Research Task Management",
+        "category": "BMAD",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bmad.monitorTaskExecution",
+        "title": "Chunky: Monitor Task Execution",
+        "category": "BMAD",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "bmad.optimizeResourceAllocation",
+        "title": "Chunky: Optimize Resource Allocation",
+        "category": "BMAD",
+        "icon": "$(settings-gear)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "bmad.quickModeSelect",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b",
+        "when": "bmadEnabled"
+      },
+      {
+        "command": "bmad.scanWorkspace",
+        "key": "ctrl+shift+alt+s",
+        "mac": "cmd+shift+alt+s"
+      },
+      {
+        "command": "bmad.autoSetup",
+        "key": "ctrl+shift+alt+i",
+        "mac": "cmd+shift+alt+i"
+      }
+    ],
+    "configuration": {
+      "title": "BMAD AI Agent Orchestrator",
+      "properties": {
+        "bmad.autoInitialize": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically initialize BMAD structure in new workspaces"
+        },
+        "bmad.defaultMode": {
+          "type": "string",
+          "enum": [
+            "documentation",
+            "fullDevelopment",
+            "continueProject",
+            "taskOverview",
+            "debugMode",
+            "continuousExecution",
+            "featureGapAnalysis",
+            "githubIntegration"
+          ],
+          "default": "documentation",
+          "description": "Default mode for new projects"
+        },
+        "bmad.enableRealTimeMonitoring": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time workspace monitoring for automatic recommendations"
+        },
+        "bmad.autoActivateRecommendedAgents": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically activate recommended AI agents based on project analysis"
+        },
+        "bmad.debugModeThreshold": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Number of critical issues that trigger automatic debug mode suggestion"
+        },
+        "bmad.progressNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show progress notifications for long-running workflows"
+        },
+        "bmad.intelligentRecommendations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable intelligent mode and agent recommendations based on project analysis"
+        },
+        "bmad.statusBarIntegration": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show BMAD status and progress in VS Code status bar"
+        }
+      }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "bmad.autoSetup",
+          "when": "explorerResourceIsFolder",
+          "group": "bmad@1"
+        },
+        {
+          "command": "bmad.analyzeFolder",
+          "when": "explorerResourceIsFolder",
+          "group": "bmad@2"
+        },
+        {
+          "command": "bmad.generateDocsForFolder",
+          "when": "explorerResourceIsFolder",
+          "group": "bmad@3"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "bmad.debugCurrentFile",
+          "when": "editorTextFocus",
+          "group": "bmad@1"
+        },
+        {
+          "command": "bmad.documentCurrentFile",
+          "when": "editorTextFocus",
+          "group": "bmad@2"
+        },
+        {
+          "command": "bmad.debugSelection",
+          "when": "editorHasSelection",
+          "group": "bmad@3"
+        },
+        {
+          "command": "bmad.explainCode",
+          "when": "editorTextFocus",
+          "group": "bmad@4"
+        },
+        {
+          "command": "bmad.generateTests",
+          "when": "editorTextFocus",
+          "group": "bmad@5"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "bmad.quickModeSelect",
+          "when": "bmadEnabled"
+        },
+        {
+          "command": "bmad.debugCurrentFile",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "bmad.documentCurrentFile",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "bmad.debugSelection",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "bmad.explainCode",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "bmad.generateTests",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "bmad.analyzeFolder",
+          "when": "bmadEnabled"
+        },
+        {
+          "command": "bmad.generateDocsForFolder",
+          "when": "bmadEnabled"
+        },
+        {
+          "command": "bmad.refreshAnalysis",
+          "when": "bmadEnabled"
+        },
+        {
+          "command": "bmad.showHelp",
+          "when": "bmadEnabled"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-web": "webpack --mode development",
+    "watch-web": "webpack --mode development --watch",
+    "package-web": "webpack --mode production --devtool hidden-source-map",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts --fix",
+    "lint-check": "eslint src --ext ts",
+    "test": "vscode-test",
+    "test-web": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js",
+    "build": "npm run compile",
+    "clean": "rimraf out dist",
+    "clean-install": "npm run clean && rimraf node_modules package-lock.json && npm cache clean --force && npm install",
+    "fresh-install": "powershell -ExecutionPolicy Bypass -File clean-install.ps1",
+    "fresh-install-bash": "bash clean-install.sh",
+    "audit-fix": "npm audit fix --force",
+    "update-deps": "npm update && npm audit",
+    "vsce:package": "@vscode/vsce package",
+    "vsce:publish": "@vscode/vsce publish",
+    "build-integration": "node build-integration.js",
+    "build-integration:verbose": "node build-integration.js --verbose",
+    "build-integration:clean": "node build-integration.js --clean",
+    "build-integration:package": "node build-integration.js --package-only",
+    "test-integration": "node test-augment-integration.js",
+    "setup": "npm install && npm run compile"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.92.0",
+    "@types/node": "^20.15.0",
+    "@typescript-eslint/eslint-plugin": "^7.17.0",
+    "@typescript-eslint/parser": "^7.17.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/test-web": "^0.0.56",
+    "@vscode/vsce": "^2.31.1",
+    "assert": "^2.1.0",
+    "eslint": "^8.57.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "rimraf": "^5.0.8",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.5.4",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "fs-extra": "^11.2.0",
+    "glob": "^10.4.2",
+    "yaml": "^2.4.5"
+  },
+  "overrides": {
+    "glob": "^10.4.2",
+    "rimraf": "^5.0.8",
+    "@npmcli/fs": "^3.1.1",
+    "cacache": "^18.0.3",
+    "make-fetch-happen": "^13.0.1",
+    "minipass": "^7.1.2",
+    "tar": "^7.4.0",
+    "semver": "^7.6.2",
+    "lru-cache": "^10.4.3",
+    "minimatch": "^9.0.5",
+    "brace-expansion": "^2.0.1"
+  },
+  "resolutions": {
+    "glob": "^10.4.2",
+    "rimraf": "^5.0.8",
+    "minipass": "^7.1.2",
+    "tar": "^7.4.0",
+    "semver": "^7.6.2",
+    "lru-cache": "^10.4.3",
+    "minimatch": "^9.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bmadcode/BMAD-METHOD.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bmadcode/BMAD-METHOD/issues"
+  },
+  "homepage": "https://github.com/bmadcode/BMAD-METHOD#readme",
+  "license": "MIT"
+}
