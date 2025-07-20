@@ -1,0 +1,38 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357ABD;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E8F4FD;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background -->
+  <circle cx="64" cy="64" r="60" fill="url(#bgGradient)" stroke="#2C5282" stroke-width="2"/>
+  
+  <!-- AI Agent nodes (representing collaboration) -->
+  <circle cx="35" cy="35" r="8" fill="#FFD700" stroke="#FFA500" stroke-width="1"/>
+  <circle cx="93" cy="35" r="8" fill="#FFD700" stroke="#FFA500" stroke-width="1"/>
+  <circle cx="35" cy="93" r="8" fill="#FFD700" stroke="#FFA500" stroke-width="1"/>
+  <circle cx="93" cy="93" r="8" fill="#FFD700" stroke="#FFA500" stroke-width="1"/>
+  
+  <!-- Connection lines (representing orchestration) -->
+  <line x1="35" y1="35" x2="93" y2="35" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+  <line x1="35" y1="35" x2="35" y2="93" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+  <line x1="93" y1="35" x2="93" y2="93" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+  <line x1="35" y1="93" x2="93" y2="93" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+  <line x1="35" y1="35" x2="93" y2="93" stroke="#FFFFFF" stroke-width="1" opacity="0.5"/>
+  <line x1="93" y1="35" x2="35" y2="93" stroke="#FFFFFF" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Central BMAD text -->
+  <text x="64" y="72" font-family="Arial, sans-serif" font-size="20" font-weight="bold" 
+        text-anchor="middle" fill="url(#textGradient)">BMAD</text>
+  
+  <!-- Subtitle -->
+  <text x="64" y="88" font-family="Arial, sans-serif" font-size="8" 
+        text-anchor="middle" fill="#E8F4FD" opacity="0.9">AI ORCHESTRATOR</text>
+</svg>
