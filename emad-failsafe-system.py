@@ -323,6 +323,405 @@ class EMADFailsafeSystem:
                         recent_indicators += 1
             
             return recent_indicators >= 2
-            
+
         except Exception:
             return False
+
+    def failsafe_1_uninitialized_detection(self):
+        """FAILSAFE 1: Detect uninitialized EMAD development"""
+        config = self.config.config["failsafe_1_uninitialized_detection"]
+
+        if not config["enabled"]:
+            return
+
+        self.logger.debug("Running Failsafe 1: Uninitialized EMAD Detection")
+
+        try:
+            # Check if EMAD is running
+            emad_running = self.is_emad_running()
+
+            # Check for recent file changes
+            recent_changes = self.detect_file_changes()
+
+            # Check last initialization time
+            last_init = self.state.get("last_emad_initialization")
+            init_timeout = datetime.now() - timedelta(hours=config["initialization_timeout_hours"])
+
+            needs_initialization = False
+            trigger_reasons = []
+
+            # Trigger conditions
+            if len(recent_changes) >= config["file_change_threshold"]:
+                if not emad_running:
+                    needs_initialization = True
+                    trigger_reasons.append("File modifications detected without active EMAD session")
+
+                if last_init is None or datetime.fromisoformat(last_init) < init_timeout:
+                    needs_initialization = True
+                    trigger_reasons.append("No recent EMAD initialization within 24 hours")
+
+            # Auto-enable conditions
+            auto_conditions = config["auto_enable_conditions"]
+            if auto_conditions["new_project_detection"] and self.detect_new_project():
+                needs_initialization = True
+                trigger_reasons.append("New project directory detected")
+
+            if auto_conditions["git_init_detection"] and self.detect_git_initialization():
+                needs_initialization = True
+                trigger_reasons.append("Git repository initialization detected")
+
+            if auto_conditions["multiple_changes_without_emad"] and len(recent_changes) > 10 and not emad_running:
+                needs_initialization = True
+                trigger_reasons.append("Multiple file changes without EMAD activity")
+
+            if needs_initialization:
+                self._trigger_failsafe_1_response(trigger_reasons, recent_changes)
+
+        except Exception as e:
+            self.logger.error(f"Error in Failsafe 1: {e}")
+
+    def failsafe_2_post_completion_detection(self):
+        """FAILSAFE 2: Detect post-completion development"""
+        config = self.config.config["failsafe_2_post_completion_detection"]
+
+        if not config["enabled"]:
+            return
+
+        self.logger.debug("Running Failsafe 2: Post-Completion Development Detection")
+
+        try:
+            # Check project completion status
+            completion_status = self.check_project_completion_status()
+
+            if not completion_status["is_completed"]:
+                return
+
+            # Check for recent file changes after completion
+            recent_changes = self.detect_file_changes()
+
+            # Check if changes occurred after completion
+            post_completion_changes = []
+            grace_period = timedelta(hours=config["completion_grace_period_hours"])
+
+            for task in completion_status["completed_tasks"]:
+                if task["completion_time"]:
+                    completion_time = datetime.fromisoformat(task["completion_time"])
+
+                    for change in recent_changes:
+                        change_time = datetime.fromisoformat(change["modified"])
+                        if change_time > completion_time + grace_period:
+                            post_completion_changes.append({
+                                "change": change,
+                                "completed_task": task["name"],
+                                "time_after_completion": str(change_time - completion_time)
+                            })
+
+            if len(post_completion_changes) >= config["significant_change_threshold"]:
+                self._trigger_failsafe_2_response(completion_status, post_completion_changes)
+
+        except Exception as e:
+            self.logger.error(f"Error in Failsafe 2: {e}")
+
+    def _trigger_failsafe_1_response(self, reasons: List[str], changes: List[Dict]):
+        """Trigger response actions for Failsafe 1"""
+        config = self.config.config["failsafe_1_uninitialized_detection"]["response_actions"]
+
+        activation = {
+            "timestamp": datetime.now().isoformat(),
+            "failsafe": "uninitialized_detection",
+            "reasons": reasons,
+            "changes_count": len(changes),
+            "actions_taken": []
+        }
+
+        self.logger.warning(f"🚨 FAILSAFE 1 ACTIVATED: Uninitialized EMAD Detection")
+        self.logger.warning(f"Trigger reasons: {', '.join(reasons)}")
+
+        if config["show_notification"]:
+            self._show_notification(
+                "⚠️ EMAD Initialization Required",
+                f"Development activity detected without active EMAD system.\n"
+                f"Reasons: {', '.join(reasons)}\n"
+                f"Files changed: {len(changes)}"
+            )
+            activation["actions_taken"].append("notification_shown")
+
+        if config["prompt_initialization"]:
+            self._prompt_emad_initialization()
+            activation["actions_taken"].append("initialization_prompted")
+
+        # Log activation
+        self.state["failsafe_activations"].append(activation)
+        self.save_state()
+
+    def _trigger_failsafe_2_response(self, completion_status: Dict, post_changes: List[Dict]):
+        """Trigger response actions for Failsafe 2"""
+        config = self.config.config["failsafe_2_post_completion_detection"]["response_actions"]
+
+        activation = {
+            "timestamp": datetime.now().isoformat(),
+            "failsafe": "post_completion_detection",
+            "completed_tasks": len(completion_status["completed_tasks"]),
+            "post_completion_changes": len(post_changes),
+            "actions_taken": []
+        }
+
+        self.logger.warning(f"🚨 FAILSAFE 2 ACTIVATED: Post-Completion Development Detection")
+        self.logger.warning(f"Completed tasks: {len(completion_status['completed_tasks'])}")
+        self.logger.warning(f"Post-completion changes: {len(post_changes)}")
+
+        if config["alert_post_completion"]:
+            self._show_notification(
+                "⚠️ Post-Completion Development Detected",
+                f"Development activity detected after project completion.\n"
+                f"Completed tasks: {len(completion_status['completed_tasks'])}\n"
+                f"Recent changes: {len(post_changes)}"
+            )
+            activation["actions_taken"].append("alert_shown")
+
+        if config["prompt_status_clarification"]:
+            self._prompt_status_clarification(completion_status)
+            activation["actions_taken"].append("status_clarification_prompted")
+
+        # Log activation
+        self.state["failsafe_activations"].append(activation)
+        self.save_state()
+
+    def _show_notification(self, title: str, message: str):
+        """Show notification to user"""
+        notification_method = self.config.config["general"]["notification_method"]
+
+        # Console notification (always available)
+        print(f"\n{'='*60}")
+        print(f"🚨 {title}")
+        print(f"{'='*60}")
+        print(message)
+        print(f"{'='*60}\n")
+
+        # Try popup notification if requested
+        if notification_method in ["popup", "both"]:
+            try:
+                if sys.platform == "win32":
+                    import ctypes
+                    ctypes.windll.user32.MessageBoxW(0, message, title, 0x30)
+            except Exception as e:
+                self.logger.debug(f"Could not show popup notification: {e}")
+
+    def _prompt_emad_initialization(self):
+        """Prompt user to initialize EMAD"""
+        print("\n🔧 EMAD Initialization Options:")
+        print("1. Start EMAD Background Runner")
+        print("2. Run EMAD Test Cycle")
+        print("3. View EMAD Status")
+        print("4. Ignore (disable this failsafe)")
+        print("5. Continue without EMAD")
+
+        try:
+            choice = input("\nSelect option (1-5): ").strip()
+
+            if choice == "1":
+                self._auto_start_emad()
+            elif choice == "2":
+                self._run_emad_test()
+            elif choice == "3":
+                self._show_emad_status()
+            elif choice == "4":
+                self._disable_failsafe("failsafe_1_uninitialized_detection")
+            elif choice == "5":
+                print("Continuing without EMAD initialization...")
+            else:
+                print("Invalid choice. Continuing...")
+
+        except (KeyboardInterrupt, EOFError):
+            print("\nPrompt cancelled. Continuing...")
+
+    def _prompt_status_clarification(self, completion_status: Dict):
+        """Prompt user for project status clarification"""
+        print("\n🔍 Project Status Clarification:")
+        print(f"Completed tasks: {len(completion_status['completed_tasks'])}")
+        print(f"Active tasks: {len(completion_status['active_tasks'])}")
+        print("\nRecent development activity detected after completion.")
+        print("\nOptions:")
+        print("1. Reopen project (mark as in progress)")
+        print("2. Create new feature branch")
+        print("3. Confirm completion override")
+        print("4. Disable post-completion detection")
+        print("5. Continue as-is")
+
+        try:
+            choice = input("\nSelect option (1-5): ").strip()
+
+            if choice == "1":
+                print("🔄 Project reopened and marked as in progress")
+            elif choice == "2":
+                print("🌿 Consider creating: git checkout -b feature/post-completion-updates")
+            elif choice == "3":
+                print("Completion override confirmed. Continuing...")
+            elif choice == "4":
+                self._disable_failsafe("failsafe_2_post_completion_detection")
+            elif choice == "5":
+                print("Continuing as-is...")
+            else:
+                print("Invalid choice. Continuing...")
+
+        except (KeyboardInterrupt, EOFError):
+            print("\nPrompt cancelled. Continuing...")
+
+    def _auto_start_emad(self):
+        """Automatically start EMAD background runner"""
+        try:
+            emad_runner = self.emad_dir / "emad-background-runner.py"
+            if emad_runner.exists():
+                result = subprocess.run([
+                    sys.executable, str(emad_runner), "start"
+                ], capture_output=True, text=True)
+
+                if result.returncode == 0:
+                    print("✅ EMAD Background Runner started successfully")
+                    self.state["last_emad_initialization"] = datetime.now().isoformat()
+                    self.save_state()
+                else:
+                    print(f"❌ Failed to start EMAD: {result.stderr}")
+            else:
+                print("❌ EMAD Background Runner not found")
+        except Exception as e:
+            print(f"❌ Error starting EMAD: {e}")
+
+    def _run_emad_test(self):
+        """Run EMAD test cycle"""
+        try:
+            emad_script = self.emad_dir / "emad-auto-sync.py"
+            if emad_script.exists():
+                result = subprocess.run([
+                    sys.executable, str(emad_script), "--test"
+                ], capture_output=True, text=True)
+
+                print("EMAD Test Results:")
+                print(result.stdout)
+                if result.stderr:
+                    print("Errors:")
+                    print(result.stderr)
+            else:
+                print("❌ EMAD script not found")
+        except Exception as e:
+            print(f"❌ Error running EMAD test: {e}")
+
+    def _show_emad_status(self):
+        """Show current EMAD status"""
+        emad_running = self.is_emad_running()
+        print(f"EMAD Status: {'✅ Running' if emad_running else '❌ Not Running'}")
+
+        last_init = self.state.get("last_emad_initialization")
+        if last_init:
+            init_time = datetime.fromisoformat(last_init)
+            print(f"Last Initialization: {init_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        else:
+            print("Last Initialization: Never")
+
+    def _disable_failsafe(self, failsafe_name: str):
+        """Disable a specific failsafe"""
+        self.config.update_setting(f"{failsafe_name}.enabled", False)
+        print(f"✅ {failsafe_name} disabled")
+
+    def start_monitoring(self):
+        """Start failsafe monitoring threads"""
+        if self.running:
+            return
+
+        self.running = True
+        self.logger.info("Starting EMAD Failsafe monitoring...")
+
+        # Start Failsafe 1 thread
+        if self.config.config["failsafe_1_uninitialized_detection"]["enabled"]:
+            thread1 = threading.Thread(target=self._monitor_failsafe_1, daemon=True)
+            thread1.start()
+            self.failsafe_threads.append(thread1)
+
+        # Start Failsafe 2 thread
+        if self.config.config["failsafe_2_post_completion_detection"]["enabled"]:
+            thread2 = threading.Thread(target=self._monitor_failsafe_2, daemon=True)
+            thread2.start()
+            self.failsafe_threads.append(thread2)
+
+        self.logger.info(f"Started {len(self.failsafe_threads)} failsafe monitoring threads")
+
+    def stop_monitoring(self):
+        """Stop failsafe monitoring"""
+        self.running = False
+        self.logger.info("Stopping EMAD Failsafe monitoring...")
+
+    def _monitor_failsafe_1(self):
+        """Monitor thread for Failsafe 1"""
+        config = self.config.config["failsafe_1_uninitialized_detection"]
+        interval = config["check_interval_seconds"]
+
+        while self.running:
+            try:
+                self.failsafe_1_uninitialized_detection()
+                time.sleep(interval)
+            except Exception as e:
+                self.logger.error(f"Error in Failsafe 1 monitoring: {e}")
+                time.sleep(60)  # Wait before retrying
+
+    def _monitor_failsafe_2(self):
+        """Monitor thread for Failsafe 2"""
+        config = self.config.config["failsafe_2_post_completion_detection"]
+        interval = config["check_interval_seconds"]
+
+        while self.running:
+            try:
+                self.failsafe_2_post_completion_detection()
+                time.sleep(interval)
+            except Exception as e:
+                self.logger.error(f"Error in Failsafe 2 monitoring: {e}")
+                time.sleep(60)  # Wait before retrying
+
+def main():
+    """Main entry point for standalone execution"""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="EMAD Failsafe System")
+    parser.add_argument("--emad-path", default=".", help="Path to EMAD directory")
+    parser.add_argument("--start", action="store_true", help="Start failsafe monitoring")
+    parser.add_argument("--test", action="store_true", help="Run failsafe tests")
+
+    args = parser.parse_args()
+
+    emad_dir = Path(args.emad_path).absolute()
+    failsafe = EMADFailsafeSystem(emad_dir)
+
+    if args.test:
+        print("🧪 Running EMAD Failsafe Tests")
+        print("=" * 40)
+
+        # Test file change detection
+        changes = failsafe.detect_file_changes()
+        print(f"Recent file changes: {len(changes)}")
+
+        # Test EMAD process detection
+        emad_running = failsafe.is_emad_running()
+        print(f"EMAD running: {'Yes' if emad_running else 'No'}")
+
+        # Test completion status
+        completion = failsafe.check_project_completion_status()
+        print(f"Project completed: {'Yes' if completion['is_completed'] else 'No'}")
+
+        print("✅ Tests completed")
+
+    elif args.start:
+        print("🚀 Starting EMAD Failsafe monitoring...")
+        failsafe.start_monitoring()
+
+        try:
+            while failsafe.running:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n🛑 Stopping failsafe monitoring...")
+            failsafe.stop_monitoring()
+
+    else:
+        print("EMAD Failsafe System")
+        print("Use --start to begin monitoring or --test to run tests")
+
+if __name__ == "__main__":
+    main()
