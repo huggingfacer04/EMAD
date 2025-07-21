@@ -1,15 +1,16 @@
 #!/bin/bash
 
 # EMAD Universal Intelligent Installation Script
-# Version: 2.0.1 (July 2025)
+# Version: 2.0.2 (July 2025)
 # Supports: All major platforms with intelligent adaptation
 # Usage: curl -sSL https://raw.githubusercontent.com/huggingfacer04/EMAD/main/install-emad-universal.sh | bash
 # Fixed: BASH_SOURCE unbound variable error when piped from curl
+# Fixed: Python dependency installation on Ubuntu 24.04 and similar systems
 
 set -euo pipefail
 
 # Global Configuration
-readonly EMAD_VERSION="2.0.1"
+readonly EMAD_VERSION="2.0.2"
 readonly EMAD_REPO="https://github.com/huggingfacer04/EMAD"
 readonly EMAD_API_BASE="https://api.emad.dev"
 readonly EMAD_CDN="https://cdn.emad.dev"
@@ -265,20 +266,61 @@ detect_python_installation() {
     return 1
 }
 
+ensure_python_packages() {
+    log "Ensuring Python packages are available..."
+
+    # Check if pip is available
+    if ! $PYTHON_CMD -m pip --version >/dev/null 2>&1; then
+        log "Installing missing Python packages..."
+
+        case "$PACKAGE_MANAGER" in
+            "apt")
+                sudo apt-get update -qq
+                sudo apt-get install -y python3-pip python3-venv python3-dev
+                ;;
+            "yum"|"dnf")
+                sudo $PACKAGE_MANAGER install -y python3-pip python3-devel
+                ;;
+            "pacman")
+                sudo pacman -S --noconfirm python-pip
+                ;;
+            "brew")
+                # pip comes with Python on macOS
+                ;;
+            "apk")
+                sudo apk add py3-pip python3-dev
+                ;;
+            *)
+                log_warn "Cannot automatically install pip on this system"
+                ;;
+        esac
+    fi
+
+    # Verify pip is now available
+    if ! $PYTHON_CMD -m pip --version >/dev/null 2>&1; then
+        log_error "pip is not available for $PYTHON_CMD"
+        return 1
+    fi
+
+    log_success "Python packages are ready"
+}
+
 install_python_if_needed() {
     if detect_python_installation; then
+        # Python found, but ensure pip and other packages are available
+        ensure_python_packages
         return 0
     fi
-    
+
     log "Installing Python..."
-    
+
     case "$PACKAGE_MANAGER" in
         "apt")
             sudo apt-get update -qq
-            sudo apt-get install -y python3 python3-pip python3-venv
+            sudo apt-get install -y python3 python3-pip python3-venv python3-dev
             ;;
         "yum"|"dnf")
-            sudo $PACKAGE_MANAGER install -y python3 python3-pip
+            sudo $PACKAGE_MANAGER install -y python3 python3-pip python3-devel
             ;;
         "pacman")
             sudo pacman -S --noconfirm python python-pip
@@ -287,7 +329,7 @@ install_python_if_needed() {
             brew install python@3.12
             ;;
         "apk")
-            sudo apk add python3 py3-pip
+            sudo apk add python3 py3-pip python3-dev
             ;;
         *)
             log_error "Cannot automatically install Python on this system"
@@ -295,13 +337,13 @@ install_python_if_needed() {
             return 1
             ;;
     esac
-    
+
     # Verify installation
     if ! detect_python_installation; then
         log_error "Python installation failed"
         return 1
     fi
-    
+
     log_success "Python installed successfully"
 }
 
@@ -328,7 +370,13 @@ setup_virtual_environment() {
 
 install_python_dependencies() {
     log "Installing Python dependencies..."
-    
+
+    # Verify pip is available before attempting installation
+    if ! $PYTHON_CMD -m pip --version >/dev/null 2>&1; then
+        log_error "pip is not available. Please ensure Python pip is installed."
+        return 1
+    fi
+
     local dependencies=(
         "requests>=2.31.0"
         "psutil>=5.9.0"
@@ -339,28 +387,46 @@ install_python_dependencies() {
         "aiofiles>=23.0.0"
         "cryptography>=41.0.0"
     )
-    
+
+    # Upgrade pip first to avoid compatibility issues
+    log "Upgrading pip..."
+    if ! $PYTHON_CMD -m pip install --user --upgrade pip >/dev/null 2>&1; then
+        log_warn "Failed to upgrade pip, continuing with current version"
+    fi
+
     # Install with intelligent retry mechanism
     for dep in "${dependencies[@]}"; do
         local attempts=0
         local max_attempts=3
-        
+
+        log "Installing $dep..."
         while [[ $attempts -lt $max_attempts ]]; do
-            if $PYTHON_CMD -m pip install --user "$dep" >/dev/null 2>&1; then
+            local install_output
+            if install_output=$($PYTHON_CMD -m pip install --user "$dep" 2>&1); then
                 log_debug "Installed: $dep"
                 break
             else
                 ((attempts++))
                 if [[ $attempts -eq $max_attempts ]]; then
                     log_error "Failed to install $dep after $max_attempts attempts"
-                    return 1
+                    log_error "Error output: $install_output"
+
+                    # Try alternative installation methods
+                    log "Attempting alternative installation for $dep..."
+                    if $PYTHON_CMD -m pip install --user --no-deps "$dep" >/dev/null 2>&1; then
+                        log_warn "Installed $dep without dependencies"
+                        break
+                    else
+                        log_error "All installation methods failed for $dep"
+                        return 1
+                    fi
                 fi
                 log_warn "Retrying installation of $dep (attempt $attempts/$max_attempts)"
                 sleep 2
             fi
         done
     done
-    
+
     log_success "All Python dependencies installed"
 }
 
