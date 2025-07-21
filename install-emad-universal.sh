@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # EMAD Universal Intelligent Installation Script
-# Version: 2.0.4 (July 2025)
+# Version: 2.1.0 (July 2025)
 # Supports: All major platforms with intelligent adaptation
 # Usage: curl -sSL https://raw.githubusercontent.com/huggingfacer04/EMAD/main/install-emad-universal.sh | bash
 # Fixed: BASH_SOURCE unbound variable error when piped from curl
@@ -9,11 +9,13 @@
 # Fixed: Download URLs to use real GitHub infrastructure instead of fictional CDN
 # Fixed: Git clone handling for existing directories
 # Fixed: Virtual environment pip installation (removed --user flag conflict)
+# Added: Automatic PATH configuration for all shells (bash, zsh, fish)
+# Added: CLI wrapper creation and cross-platform shell integration
 
 set -euo pipefail
 
 # Global Configuration
-readonly EMAD_VERSION="2.0.4"
+readonly EMAD_VERSION="2.1.0"
 readonly EMAD_REPO="https://github.com/huggingfacer04/EMAD"
 readonly EMAD_GITHUB_API="https://api.github.com/repos/huggingfacer04/EMAD"
 readonly EMAD_ARCHIVE_BASE="https://github.com/huggingfacer04/EMAD/archive"
@@ -775,6 +777,133 @@ show_troubleshooting_guide() {
     echo "Support: https://github.com/huggingfacer04/EMAD/issues"
 }
 
+# Automatic PATH Configuration
+setup_automatic_path() {
+    log "Setting up automatic PATH configuration..."
+
+    local emad_bin_dir="$EMAD_DIR/bin"
+    local path_export="export PATH=\"$emad_bin_dir:\$PATH\""
+
+    # Create bin directory if it doesn't exist
+    mkdir -p "$emad_bin_dir"
+
+    # Create EMAD CLI wrapper script
+    create_emad_cli_wrapper
+
+    # Detect user's shell and configuration files
+    local shell_configs=()
+    local current_shell="${SHELL##*/}"
+
+    # Add shell-specific config files
+    case "$current_shell" in
+        "bash")
+            [[ -f "$HOME/.bashrc" ]] && shell_configs+=("$HOME/.bashrc")
+            [[ -f "$HOME/.bash_profile" ]] && shell_configs+=("$HOME/.bash_profile")
+            [[ -f "$HOME/.profile" ]] && shell_configs+=("$HOME/.profile")
+            ;;
+        "zsh")
+            [[ -f "$HOME/.zshrc" ]] && shell_configs+=("$HOME/.zshrc")
+            [[ -f "$HOME/.zprofile" ]] && shell_configs+=("$HOME/.zprofile")
+            [[ -f "$HOME/.profile" ]] && shell_configs+=("$HOME/.profile")
+            ;;
+        "fish")
+            local fish_config_dir="$HOME/.config/fish"
+            mkdir -p "$fish_config_dir"
+            shell_configs+=("$fish_config_dir/config.fish")
+            path_export="set -gx PATH $emad_bin_dir \$PATH"
+            ;;
+        *)
+            # Fallback to common profile files
+            [[ -f "$HOME/.profile" ]] && shell_configs+=("$HOME/.profile")
+            [[ -f "$HOME/.bashrc" ]] && shell_configs+=("$HOME/.bashrc")
+            ;;
+    esac
+
+    # Add PATH to shell configuration files
+    local path_added=false
+    for config_file in "${shell_configs[@]}"; do
+        if [[ -f "$config_file" ]] || [[ "$config_file" == *"config.fish" ]]; then
+            # Check if EMAD PATH is already configured
+            if ! grep -q "$emad_bin_dir" "$config_file" 2>/dev/null; then
+                echo "" >> "$config_file"
+                echo "# EMAD Universal System PATH" >> "$config_file"
+                echo "$path_export" >> "$config_file"
+                log_success "Added EMAD to PATH in: $config_file"
+                path_added=true
+            else
+                log "EMAD PATH already configured in: $config_file"
+                path_added=true
+            fi
+        fi
+    done
+
+    # Fallback: create .profile if no config files found
+    if [[ "$path_added" == "false" ]]; then
+        local profile_file="$HOME/.profile"
+        echo "" >> "$profile_file"
+        echo "# EMAD Universal System PATH" >> "$profile_file"
+        echo "$path_export" >> "$profile_file"
+        log_success "Created and configured: $profile_file"
+        path_added=true
+    fi
+
+    # Set PATH for current session
+    export PATH="$emad_bin_dir:$PATH"
+    log_success "EMAD added to current session PATH"
+
+    if [[ "$path_added" == "true" ]]; then
+        log_success "Automatic PATH configuration completed"
+        log "EMAD will be available in new terminal sessions"
+    else
+        log_warn "Could not automatically configure PATH"
+        log_warn "Please manually add: $path_export"
+    fi
+}
+
+create_emad_cli_wrapper() {
+    local emad_bin_dir="$EMAD_DIR/bin"
+    local emad_cli="$emad_bin_dir/emad"
+
+    # Create a simple CLI wrapper
+    cat > "$emad_cli" << 'EOF'
+#!/bin/bash
+# EMAD Universal System CLI Wrapper
+
+EMAD_DIR="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")"
+PYTHON_CMD=""
+
+# Find Python command
+for cmd in python3.12 python3.11 python3.10 python3.9 python3.8 python3.7 python3 python; do
+    if command -v "$cmd" >/dev/null 2>&1; then
+        PYTHON_CMD="$cmd"
+        break
+    fi
+done
+
+if [[ -z "$PYTHON_CMD" ]]; then
+    echo "Error: Python not found" >&2
+    exit 1
+fi
+
+# Activate virtual environment if it exists
+if [[ -f "$EMAD_DIR/venv/bin/activate" ]]; then
+    source "$EMAD_DIR/venv/bin/activate"
+fi
+
+# Run EMAD CLI
+if [[ -f "$EMAD_DIR/emad-cli.py" ]]; then
+    exec "$PYTHON_CMD" "$EMAD_DIR/emad-cli.py" "$@"
+else
+    echo "EMAD CLI not found. Please check your installation."
+    echo "Installation directory: $EMAD_DIR"
+    exit 1
+fi
+EOF
+
+    chmod +x "$emad_cli"
+    log_success "Created EMAD CLI wrapper: $emad_cli"
+}
+
 # Main Installation Flow
 main() {
     print_header
@@ -806,8 +935,12 @@ main() {
     # Phase 5: Verification
     log "Phase 5: System Verification"
     verify_installation
-    
-    # Phase 6: Completion
+
+    # Phase 6: PATH Configuration
+    log "Phase 6: Automatic PATH Configuration"
+    setup_automatic_path
+
+    # Phase 7: Completion
     log_success "EMAD Universal Installation completed successfully!"
     
     echo -e "${GREEN}${BOLD}"
@@ -816,14 +949,24 @@ main() {
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     
-    echo "Next steps:"
-    echo "1. Add EMAD to your PATH: export PATH=\"$EMAD_DIR/bin:\$PATH\""
-    echo "2. Initialize in your project: emad init"
-    echo "3. Start monitoring: emad start"
-    echo "4. Check status: emad status"
+    echo "🎉 EMAD is now ready to use!"
     echo ""
-    echo "Documentation: https://docs.emad.dev"
-    echo "Support: https://github.com/huggingfacer04/EMAD/discussions"
+    echo "✅ Automatic setup completed:"
+    echo "   • EMAD added to your PATH automatically"
+    echo "   • CLI wrapper created: $EMAD_DIR/bin/emad"
+    echo "   • Available in new terminal sessions"
+    echo ""
+    echo "🚀 Quick start (current session):"
+    echo "   1. emad init          # Initialize in your project"
+    echo "   2. emad start         # Start monitoring"
+    echo "   3. emad status        # Check status"
+    echo ""
+    echo "📖 Resources:"
+    echo "   • Documentation: https://docs.emad.dev"
+    echo "   • Support: https://github.com/huggingfacer04/EMAD/discussions"
+    echo "   • Installation: $EMAD_DIR"
+    echo ""
+    echo "💡 Open a new terminal or run 'source ~/.bashrc' to use EMAD globally"
 }
 
 # Execute main function if script is run directly or piped from curl
