@@ -1,19 +1,21 @@
 #!/bin/bash
 
 # EMAD Universal Intelligent Installation Script
-# Version: 2.0.2 (July 2025)
+# Version: 2.0.3 (July 2025)
 # Supports: All major platforms with intelligent adaptation
 # Usage: curl -sSL https://raw.githubusercontent.com/huggingfacer04/EMAD/main/install-emad-universal.sh | bash
 # Fixed: BASH_SOURCE unbound variable error when piped from curl
 # Fixed: Python dependency installation on Ubuntu 24.04 and similar systems
+# Fixed: Download URLs to use real GitHub infrastructure instead of fictional CDN
+# Fixed: Git clone handling for existing directories
 
 set -euo pipefail
 
 # Global Configuration
-readonly EMAD_VERSION="2.0.2"
+readonly EMAD_VERSION="2.0.3"
 readonly EMAD_REPO="https://github.com/huggingfacer04/EMAD"
-readonly EMAD_API_BASE="https://api.emad.dev"
-readonly EMAD_CDN="https://cdn.emad.dev"
+readonly EMAD_GITHUB_API="https://api.github.com/repos/huggingfacer04/EMAD"
+readonly EMAD_ARCHIVE_BASE="https://github.com/huggingfacer04/EMAD/archive"
 readonly INSTALL_LOG="/tmp/emad-install-$(date +%s).log"
 readonly PYTHON_MIN_VERSION="3.7"
 readonly PYTHON_RECOMMENDED_VERSION="3.12"
@@ -461,18 +463,27 @@ download_emad_system() {
 
 download_via_git() {
     log "Downloading via Git..."
-    
+
+    # Remove existing directory if it exists and is not empty
+    if [[ -d "$EMAD_DIR" ]] && [[ "$(ls -A "$EMAD_DIR" 2>/dev/null)" ]]; then
+        log "Removing existing EMAD directory..."
+        rm -rf "$EMAD_DIR"
+        mkdir -p "$EMAD_DIR"
+        cd "$EMAD_DIR"
+    fi
+
     local git_opts=(
         "--depth=1"
         "--single-branch"
         "--branch=main"
     )
-    
+
     # Configure Git for corporate environments
     if [[ "$NETWORK_TYPE" == "corporate" ]]; then
         git config --global http.sslverify false 2>/dev/null || true
     fi
-    
+
+    # Try to clone into current directory
     if git clone "${git_opts[@]}" "$EMAD_REPO" . 2>/dev/null; then
         log_success "EMAD system downloaded via Git"
     else
@@ -483,34 +494,47 @@ download_via_git() {
 
 download_via_curl() {
     log "Downloading via curl..."
-    
-    local archive_url="$EMAD_CDN/releases/latest/emad-${EMAD_VERSION}.tar.gz"
-    local temp_file="/tmp/emad-${EMAD_VERSION}.tar.gz"
-    
+
+    # Use GitHub's archive download URL
+    local archive_url="$EMAD_ARCHIVE_BASE/refs/heads/main.tar.gz"
+    local temp_file="/tmp/emad-main.tar.gz"
+
+    log "Downloading from: $archive_url"
+
     # Download with retry mechanism
     local attempts=0
     local max_attempts=3
-    
+
     while [[ $attempts -lt $max_attempts ]]; do
         if curl -fsSL --retry 3 --retry-delay 2 "$archive_url" -o "$temp_file"; then
+            log_success "Download completed"
             break
         else
             ((attempts++))
             if [[ $attempts -eq $max_attempts ]]; then
                 log_error "Failed to download EMAD system after $max_attempts attempts"
+                log_error "URL: $archive_url"
                 return 1
             fi
             log_warn "Download failed, retrying (attempt $attempts/$max_attempts)"
             sleep 5
         fi
     done
-    
+
+    # Remove existing directory if it exists
+    if [[ -d "$EMAD_DIR" ]] && [[ "$(ls -A "$EMAD_DIR" 2>/dev/null)" ]]; then
+        log "Removing existing EMAD directory..."
+        rm -rf "$EMAD_DIR"
+        mkdir -p "$EMAD_DIR"
+    fi
+
     # Extract archive
     if tar -xzf "$temp_file" -C "$EMAD_DIR" --strip-components=1; then
         rm -f "$temp_file"
         log_success "EMAD system downloaded and extracted"
     else
         log_error "Failed to extract EMAD system"
+        log_error "Archive: $temp_file"
         return 1
     fi
 }
@@ -674,19 +698,65 @@ fix_network_issues() {
     fi
 }
 
+verify_installation() {
+    log "Verifying EMAD installation..."
+
+    local verification_passed=true
+
+    # Check if EMAD directory exists and has content
+    if [[ ! -d "$EMAD_DIR" ]] || [[ -z "$(ls -A "$EMAD_DIR" 2>/dev/null)" ]]; then
+        log_error "EMAD directory is missing or empty: $EMAD_DIR"
+        verification_passed=false
+    else
+        log_success "EMAD directory exists: $EMAD_DIR"
+    fi
+
+    # Check if key files exist
+    local key_files=("README.md" "package.json" "install-emad-universal.sh")
+    for file in "${key_files[@]}"; do
+        if [[ -f "$EMAD_DIR/$file" ]]; then
+            log_success "Found: $file"
+        else
+            log_warn "Missing: $file"
+        fi
+    done
+
+    # Check Python installation
+    if [[ -n "$PYTHON_CMD" ]] && $PYTHON_CMD --version >/dev/null 2>&1; then
+        log_success "Python is available: $($PYTHON_CMD --version)"
+    else
+        log_error "Python is not available"
+        verification_passed=false
+    fi
+
+    # Check pip availability
+    if [[ -n "$PYTHON_CMD" ]] && $PYTHON_CMD -m pip --version >/dev/null 2>&1; then
+        log_success "pip is available"
+    else
+        log_warn "pip is not available"
+    fi
+
+    if [[ "$verification_passed" == "true" ]]; then
+        log_success "Installation verification passed"
+    else
+        log_warn "Installation verification had issues"
+    fi
+}
+
 show_troubleshooting_guide() {
     echo -e "${YELLOW}${BOLD}"
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║                    Troubleshooting Guide                     ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    
+
     echo "Common solutions:"
     echo "1. Ensure you have internet connectivity"
     echo "2. Check if Python 3.7+ is installed: python3 --version"
     echo "3. Verify Git is available: git --version"
     echo "4. For corporate networks, configure proxy settings"
     echo "5. Run with debug mode: EMAD_DEBUG=true bash install.sh"
+    echo "6. Clear previous installation: rm -rf ~/.emad"
     echo ""
     echo "Log file: $INSTALL_LOG"
     echo "Support: https://github.com/huggingfacer04/EMAD/issues"
@@ -722,11 +792,7 @@ main() {
     
     # Phase 5: Verification
     log "Phase 5: System Verification"
-    if "$EMAD_DIR/scripts/verify-installation.py"; then
-        log_success "Installation verification passed"
-    else
-        log_warn "Installation verification had issues"
-    fi
+    verify_installation
     
     # Phase 6: Completion
     log_success "EMAD Universal Installation completed successfully!"
