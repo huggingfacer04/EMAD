@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # EMAD Universal Intelligent Installation Script
-# Version: 2.0.0 (July 2025)
+# Version: 2.0.1 (July 2025)
 # Supports: All major platforms with intelligent adaptation
-# Usage: curl -sSL https://install.emad.dev | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/huggingfacer04/EMAD/main/install-emad-universal.sh | bash
+# Fixed: BASH_SOURCE unbound variable error when piped from curl
 
 set -euo pipefail
 
 # Global Configuration
-readonly EMAD_VERSION="2.0.0"
+readonly EMAD_VERSION="2.0.1"
 readonly EMAD_REPO="https://github.com/huggingfacer04/EMAD"
 readonly EMAD_API_BASE="https://api.emad.dev"
 readonly EMAD_CDN="https://cdn.emad.dev"
@@ -680,7 +681,13 @@ main() {
     echo "Support: https://github.com/huggingfacer04/EMAD/discussions"
 }
 
-# Execute main function if script is run directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+# Execute main function if script is run directly or piped from curl
+# Handle both direct execution and piped execution (curl | bash)
+# BASH_SOURCE[0] is undefined when script is piped from curl, so we check for both conditions
+if [[ "${BASH_SOURCE[0]:-}" == "${0}" ]] || [[ -z "${BASH_SOURCE[0]:-}" ]]; then
+    # Ensure we're in a reasonable working directory for piped execution
+    if [[ -z "${BASH_SOURCE[0]:-}" ]] && [[ "$(pwd)" == "/" ]]; then
+        cd "$HOME" || cd /tmp
+    fi
     main "$@"
 fi
