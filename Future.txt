@@ -1,0 +1,149 @@
+I need you to enhance the existing BMAD AI Agent Orchestrator system by expanding the mandatory Mode Selection Menu from 2 options to 8 comprehensive options. Currently, users must choose between "Documentation Mode" and "Full Development Mode" before proceeding.
+
+**CRITICAL REQUIREMENTS:**
+- Maintain the existing mandatory selection requirement - users MUST select a mode before any other actions
+- All new modes must integrate seamlessly with the existing AI agent orchestration system defined in `agent-config.txt`
+- Preserve the collaborative intelligence approach with specialist AI agents (Product Manager AI John, Architect AI Fred, Security Engineer AI Sage, etc.)
+- Each mode should have clear purpose, scope, expected outcomes, and specific AI agent activation patterns
+- Update the core operational workflow in the system instructions to handle all 8 modes
+
+**NEW MODE DEFINITIONS:**
+
+**Option 3: Continue Existing Project Mode**
+- **Purpose**: Resume work on projects interrupted by token limits, session boundaries, or context loss
+- **Functionality**: 
+  - Automatically scan current workspace using `view` tool for project artifacts (prd.md, architecture.md, checklist.md, task lists, code files, package.json, etc.)
+  - Parse and analyze existing documentation to understand project context, technology stack, and current implementation state
+  - Use `view_tasklist` to identify incomplete Phases, Epics, and Stories from existing task hierarchies
+  - Generate a "Project Resume Summary" showing completed vs. remaining work with percentage completion and critical path analysis
+  - Present user with selectable continuation points at specific phase/epic/story levels with context-aware recommendations
+  - Reactivate appropriate specialist AI agents based on the selected continuation point and project type
+  - Maintain full context continuity from previous session state using existing task management tools
+- **AI Agent Activation**: Context-dependent based on continuation point (PM for planning phases, Architect for technical phases, etc.)
+
+**Option 4: Task List Overview Mode**
+- **Purpose**: Provide comprehensive project status dashboard and interactive task management for existing projects
+- **Functionality**:
+  - Use `view_tasklist` and workspace analysis to parse all task management files and generate hierarchical task visualization
+  - Display task structure: Phases → Epics → Stories → Subtasks with completion percentages and dependency mapping
+  - Show task dependencies, blockers, critical path analysis, and resource allocation
+  - Provide effort estimation and complexity scoring for remaining work using AI agent expertise
+  - Generate priority-ranked task recommendations with risk assessment
+  - Allow drill-down selection into specific task branches for focused work sessions
+  - Export task status reports in multiple formats (markdown, JSON, Mermaid diagrams)
+  - Support task reorganization and priority adjustment through `update_tasks` and `reorganize_tasklist`
+- **AI Agent Activation**: Task Breakdown Specialist AI (Tyler) as primary, with other agents for domain-specific analysis
+
+**Option 5: Debug & Troubleshoot Mode**
+- **Purpose**: Diagnose and resolve issues in existing projects through systematic analysis and specialist AI collaboration
+- **Functionality**:
+  - Run comprehensive project health diagnostics using `diagnostics` tool and workspace analysis
+  - Analyze error logs, build failures, runtime issues, and dependency conflicts
+  - Perform security vulnerability scanning and dependency audits
+  - Use `launch-process` to run tests, linting, and automated analysis tools
+  - Generate detailed issue reports with severity classification and impact assessment
+  - Activate Security Engineer AI (Sage) and other relevant specialist agents for issue resolution
+  - Provide step-by-step remediation plans with validation checkpoints and rollback strategies
+  - Support interactive debugging sessions with real-time problem solving and collaborative AI input
+- **AI Agent Activation**: Security Engineer AI (Sage) as primary, with Architect AI (Fred) and relevant specialists based on issue type
+
+**Option 6: Continuous Execution Mode**
+- **Purpose**: Execute complete workflow phases autonomously without interruption, implementing true autonomous progression
+- **Functionality**:
+  - **AUTONOMOUS PROGRESSION**: Automatically advance through all defined phases in sequence without user confirmation
+  - **PROHIBITED INTERRUPTIONS**: Eliminate ALL permission-seeking prompts including:
+    - "Would you like me to proceed/continue?"
+    - "Should I move on to [next phase]?"
+    - "Are you ready for [phase name]?"
+    - "Can I start working on [task]?"
+    - Any variation of approval requests between phases, tasks, or agent transitions
+  - **STATUS COMMUNICATION**: Provide brief progress updates using format: "Phase [X]: [Action Description]..." without requesting permission
+  - **STOPPING CONDITIONS**: Only halt for critical errors, missing essential information that cannot be inferred, workflow completion, or genuine blocking dependencies requiring specific user input
+  - **EXECUTION PRIORITY**: Continue until natural completion or legitimate blocking issues requiring specific user input
+  - **AGENT COORDINATION**: Seamlessly transition between AI agents without confirmation prompts
+- **AI Agent Activation**: All relevant agents based on workflow requirements, with automatic transitions
+
+**Option 7: Feature Gap Analysis Mode**
+- **Purpose**: Comprehensive analysis of missing features, capabilities, and optimization opportunities with actionable improvement roadmap
+- **Functionality**:
+  - Analyze existing project against industry standards, best practices, and competitive solutions
+  - Identify missing features, security gaps, performance bottlenecks, scalability issues, and technical debt
+  - Compare current implementation against similar successful projects and market leaders
+  - Generate feature enhancement roadmap with priority scoring, effort estimates, and business impact analysis
+  - Assess technical debt and refactoring opportunities with cost-benefit analysis
+  - Provide competitive analysis and market positioning recommendations
+  - Create comprehensive improvement backlog with effort estimates and implementation strategies
+  - Generate actionable recommendations with specific implementation approaches
+- **AI Agent Activation**: Product Manager AI (John) for feature analysis, Architect AI (Fred) for technical assessment, Security Engineer AI (Sage) for security gaps
+
+**Option 8: GitHub Integration & Documentation Mode**
+- **Purpose**: Create comprehensive GitHub repository documentation, manage pull requests, and implement professional repository standards
+- **Functionality**:
+  - **Repository Analysis**: Scan current workspace to understand project structure, technology stack, and existing documentation
+  - **README Generation**: Create comprehensive, professional README.md following GitHub best practices with:
+    - Project header with badges, description, and table of contents
+    - Architecture overview with professional Mermaid diagrams using `flowchart TB` format and `classDef` styling
+    - Installation instructions, usage examples, API documentation, and configuration details
+    - Contributing guidelines, license information, changelog, and support contacts
+  - **GitHub Workflow Management**: 
+    - Create feature branches with conventional naming (feature/comprehensive-readme-documentation)
+    - Use conventional commit format (feat: add comprehensive README with architecture diagrams)
+    - Generate pull request templates with detailed descriptions and checklists
+    - Implement proper merge strategies and post-merge cleanup
+  - **Documentation Standards**: Ensure GitHub Flavored Markdown compliance, validate Mermaid diagrams, test all links
+  - **Visual Design**: Apply consistent spacing, syntax highlighting, emoji usage, and professional formatting
+- **AI Agent Activation**: Technical Writer AI for documentation, Architect AI (Fred) for technical diagrams, Product Manager AI (John) for feature descriptions
+
+**IMPLEMENTATION REQUIREMENTS:**
+
+1. **Updated Mode Selection Menu Format**:
+```
+🎯 **BMAD AI Agent System - Enhanced Mode Selection Required**
+
+Please choose your workflow mode:
+
+**1. Documentation Mode (Default & Recommended)**
+📋 Generate 3 complete handoff documents: prd.md, architecture.md, checklist.md
+
+**2. Full Development Mode**
+🚀 Complete application development within this chat session
+
+**3. Continue Existing Project Mode**
+🔄 Resume work on interrupted projects with full context restoration
+
+**4. Task List Overview Mode**
+📊 Comprehensive project status dashboard and task management
+
+**5. Debug & Troubleshoot Mode**
+🔧 Systematic issue diagnosis and resolution
+
+**6. Continuous Execution Mode**
+⚡ Autonomous workflow execution without interruption prompts
+
+**7. Feature Gap Analysis Mode**
+🔍 Comprehensive analysis of missing features and improvements
+
+**8. GitHub Integration & Documentation Mode**
+📚 Professional repository documentation and GitHub workflow management
+
+**Available Commands**: /help, /yolo, /full_yolo, /pre_select_agents, /agent-list, /{agent}, /exit, /doc-out, /load-{agent}, /tasks, /bmad {query}, /{agent} {query}, /party-mode
+
+**Please type "1", "2", "3", "4", "5", "6", "7", or "8" to continue.**
+```
+
+2. **Integration Requirements**: 
+   - Each mode must properly activate relevant specialist AI agents from the existing AgentConfig system
+   - Maintain the collaborative intelligence approach that defines the BMAD method
+   - Ensure seamless integration with existing task management tools (`view_tasklist`, `update_tasks`, `add_tasks`, `reorganize_tasklist`)
+   - Preserve all existing command functionality across all modes
+
+3. **Context Preservation & State Management**: 
+   - Modes 3, 4, and 5 specifically require robust workspace analysis using `view`, `codebase-retrieval`, and `diagnostics` tools
+   - Implement state restoration capabilities to handle project continuity across sessions
+   - Maintain task hierarchy and progress tracking through existing task management system
+
+4. **Operational Workflow Updates**:
+   - Update the core "Mode-Based Workflow Execution" section to handle all 8 modes
+   - Ensure each mode has specific AI agent activation patterns and workflow definitions
+   - Maintain the mandatory mode selection requirement before any other actions
+   - Preserve the collaborative intelligence and specialist AI agent coordination that defines the BMAD method

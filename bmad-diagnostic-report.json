@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-07-13T05:51:04.125Z",
+  "vsCodeVersion": null,
+  "extensions": [],
+  "bmadFiles": {
+    "src/integration/AugmentIntegration.ts": true,
+    "out/integration/AugmentIntegration.js": true,
+    "package.json": true
+  },
+  "packageJson": {},
+  "recommendations": []
+}
