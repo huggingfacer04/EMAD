@@ -1,18 +1,19 @@
 #!/bin/bash
 
 # EMAD Universal Intelligent Installation Script
-# Version: 2.0.3 (July 2025)
+# Version: 2.0.4 (July 2025)
 # Supports: All major platforms with intelligent adaptation
 # Usage: curl -sSL https://raw.githubusercontent.com/huggingfacer04/EMAD/main/install-emad-universal.sh | bash
 # Fixed: BASH_SOURCE unbound variable error when piped from curl
 # Fixed: Python dependency installation on Ubuntu 24.04 and similar systems
 # Fixed: Download URLs to use real GitHub infrastructure instead of fictional CDN
 # Fixed: Git clone handling for existing directories
+# Fixed: Virtual environment pip installation (removed --user flag conflict)
 
 set -euo pipefail
 
 # Global Configuration
-readonly EMAD_VERSION="2.0.3"
+readonly EMAD_VERSION="2.0.4"
 readonly EMAD_REPO="https://github.com/huggingfacer04/EMAD"
 readonly EMAD_GITHUB_API="https://api.github.com/repos/huggingfacer04/EMAD"
 readonly EMAD_ARCHIVE_BASE="https://github.com/huggingfacer04/EMAD/archive"
@@ -373,6 +374,18 @@ setup_virtual_environment() {
 install_python_dependencies() {
     log "Installing Python dependencies..."
 
+    # Determine if we're in a virtual environment
+    local pip_install_args=""
+    if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+        log "Installing to virtual environment: $VIRTUAL_ENV"
+        # In virtual environment, don't use --user
+        pip_install_args=""
+    else
+        log "Installing to user site-packages"
+        # Not in virtual environment, use --user
+        pip_install_args="--user"
+    fi
+
     # Verify pip is available before attempting installation
     if ! $PYTHON_CMD -m pip --version >/dev/null 2>&1; then
         log_error "pip is not available. Please ensure Python pip is installed."
@@ -392,7 +405,7 @@ install_python_dependencies() {
 
     # Upgrade pip first to avoid compatibility issues
     log "Upgrading pip..."
-    if ! $PYTHON_CMD -m pip install --user --upgrade pip >/dev/null 2>&1; then
+    if ! $PYTHON_CMD -m pip install $pip_install_args --upgrade pip >/dev/null 2>&1; then
         log_warn "Failed to upgrade pip, continuing with current version"
     fi
 
@@ -404,7 +417,7 @@ install_python_dependencies() {
         log "Installing $dep..."
         while [[ $attempts -lt $max_attempts ]]; do
             local install_output
-            if install_output=$($PYTHON_CMD -m pip install --user "$dep" 2>&1); then
+            if install_output=$($PYTHON_CMD -m pip install $pip_install_args "$dep" 2>&1); then
                 log_debug "Installed: $dep"
                 break
             else
@@ -415,7 +428,7 @@ install_python_dependencies() {
 
                     # Try alternative installation methods
                     log "Attempting alternative installation for $dep..."
-                    if $PYTHON_CMD -m pip install --user --no-deps "$dep" >/dev/null 2>&1; then
+                    if $PYTHON_CMD -m pip install $pip_install_args --no-deps "$dep" >/dev/null 2>&1; then
                         log_warn "Installed $dep without dependencies"
                         break
                     else
